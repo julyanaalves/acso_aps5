@@ -2,6 +2,7 @@ import copy
 import os
 import sys
 
+# --- CLASSE PROCESSO ---
 class Processo:
     def __init__(self, pid, chegada, prioridade, tempo_cpu):
         self.pid = pid
@@ -13,29 +14,28 @@ class Processo:
         self.tempo_fim = 0
         self.tempo_retorno = 0 # Turnaround
 
+# --- LEITURA DE ARQUIVO ---
 def ler_arquivo(nome_arquivo):
     processos = []
     try:
         with open(nome_arquivo, 'r') as f:
             linhas = f.readlines()
+            linhas = [l.strip() for l in linhas if l.strip()] # Limpa vazias
             
-            # Limpa linhas vazias
-            linhas = [l.strip() for l in linhas if l.strip()]
-            
-            # 1. Leitura da Configuração (Linha 1)
+            # 1. Configuração
             config = linhas[0].split(',')
             if not config[0].isdigit():
-                 print("Erro: A primeira linha do arquivo deve conter os números de configuração.")
-                 exit()
+                 print("Erro: A primeira linha deve conter os numeros de configuracao.")
+                 sys.exit(1)
                  
             n_proc = int(config[0])
             quantum = int(config[1])
             t_troca = int(config[2])
             
-            # 2. Leitura dos Processos
+            # 2. Processos
             count = 0
             for linha in linhas[1:]:
-                if count >= n_proc: break # Para se já leu todos os processos
+                if count >= n_proc: break # Para se ja leu todos
                 if not linha[0].isdigit(): break # Para se achou texto
                     
                 dados = linha.split(',')
@@ -46,17 +46,15 @@ def ler_arquivo(nome_arquivo):
                 count += 1
                 
     except FileNotFoundError:
-        print(f"Erro: O arquivo '{nome_arquivo}' não foi encontrado.")
+        print(f"Erro: Arquivo '{nome_arquivo}' nao encontrado.")
         sys.exit(1)
-    except ValueError:
-        print("Erro de Formatação no arquivo de entrada.")
-        sys.exit(1)
-    except IndexError:
-        print("Erro: Arquivo vazio ou mal formatado.")
+    except Exception as e:
+        print(f"Erro ao ler arquivo: {e}")
         sys.exit(1)
         
     return processos, quantum, t_troca
 
+# --- LOG E IMPRESSÃO ---
 def log(texto, arquivo_saida):
     print(texto, end='') 
     with open(arquivo_saida, 'a', encoding='utf-8') as f: 
@@ -150,27 +148,41 @@ def run_srtf(processos, t_troca):
     pendentes = processos
     ultimo_pid = -1
     concluidos = 0
+    
     while concluidos < len(processos):
         disponiveis = [p for p in pendentes if p.chegada <= tempo_atual and p.tempo_restante > 0]
         if not disponiveis:
             tempo_atual += 1
             continue
         escolhido = min(disponiveis, key=lambda x: x.tempo_restante)
+        
+        # Lógica de Troca
         if escolhido.pid != ultimo_pid:
             if ultimo_pid != -1: 
                 trocas += 1
                 tempo_atual += t_troca
                 linha_tempo.append('Troca')
             ultimo_pid = escolhido.pid
+        
         escolhido.tempo_restante -= 1
         tempo_atual += 1
-        if len(linha_tempo) == 0 or linha_tempo[-1] != escolhido.pid:
-             if linha_tempo and linha_tempo[-1] == 'Troca': pass
-             else: linha_tempo.append(escolhido.pid)
+        
+        # --- CORREÇÃO VISUAL ---
+        # Adiciona na linha do tempo se for novo ou se vier depois de uma troca
+        should_add = False
+        if len(linha_tempo) == 0: should_add = True
+        elif linha_tempo[-1] == 'Troca': should_add = True
+        elif linha_tempo[-1] != escolhido.pid: should_add = True
+        
+        if should_add:
+            linha_tempo.append(escolhido.pid)
+        # -----------------------
+
         if escolhido.tempo_restante == 0:
             escolhido.tempo_fim = tempo_atual
             concluidos += 1
             ultimo_pid = -1 
+            
     return processos, trocas, tempo_atual, linha_tempo
 
 def run_rr(processos, quantum, t_troca):
@@ -220,18 +232,29 @@ def run_prioridade(processos, t_troca):
         if not disponiveis:
             tempo_atual += 1
             continue
+        # Maior numero = Maior prioridade
         escolhido = sorted(disponiveis, key=lambda x: (-x.prioridade, x.chegada))[0]
+        
         if escolhido.pid != ultimo_pid:
             if ultimo_pid != -1:
                 trocas += 1
                 tempo_atual += t_troca
                 linha_tempo.append('Troca')
             ultimo_pid = escolhido.pid
+            
         escolhido.tempo_restante -= 1
         tempo_atual += 1
-        if len(linha_tempo) == 0 or linha_tempo[-1] != escolhido.pid:
-             if linha_tempo and linha_tempo[-1] == 'Troca': pass
-             else: linha_tempo.append(escolhido.pid)
+        
+        # --- CORREÇÃO VISUAL ---
+        should_add = False
+        if len(linha_tempo) == 0: should_add = True
+        elif linha_tempo[-1] == 'Troca': should_add = True
+        elif linha_tempo[-1] != escolhido.pid: should_add = True
+        
+        if should_add:
+            linha_tempo.append(escolhido.pid)
+        # -----------------------
+
         if escolhido.tempo_restante == 0:
             escolhido.tempo_fim = tempo_atual
             concluidos += 1
@@ -240,7 +263,6 @@ def run_prioridade(processos, t_troca):
 
 # --- MAIN ---
 if __name__ == "__main__":
-    # Verifica argumentos da linha de comando
     if len(sys.argv) < 2:
         print("Erro: Forneca o arquivo de entrada.")
         print("Exemplo: python main.py in/EntradaProcessos.txt")
@@ -249,16 +271,13 @@ if __name__ == "__main__":
     arquivo_entrada = sys.argv[1]
     pasta_saida = 'report'
     
-    # Gera nome da saída baseado na entrada
-    # Ex: in/EntradaTeste1.txt -> report/Saida_EntradaTeste1.txt
-    nome_base = os.path.basename(arquivo_entrada) # Pega só o nome do arquivo (sem pasta)
-    nome_sem_extensao = os.path.splitext(nome_base)[0] # Tira o .txt
+    nome_base = os.path.basename(arquivo_entrada) 
+    nome_sem_extensao = os.path.splitext(nome_base)[0] 
     arquivo_saida = os.path.join(pasta_saida, f"Saida_{nome_sem_extensao}.txt")
     
     if not os.path.exists(pasta_saida):
         os.makedirs(pasta_saida)
     
-    # Limpa arquivo anterior
     open(arquivo_saida, 'w').close()
     
     print(f"Lendo: {arquivo_entrada}")

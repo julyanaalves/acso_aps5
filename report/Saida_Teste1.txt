@@ -45,7 +45,7 @@ Tempo Total Simulacao:   17ms
 Overhead do Sistema:     0.00%
 
 Linha do Tempo (Gantt):
-| P1 | (Troca) | (Troca) |
+| P1 | (Troca) | P2 | (Troca) | P3 | P2 | P1 |
 
 ==================================================
 
@@ -79,7 +79,7 @@ Tempo Total Simulacao:   17ms
 Overhead do Sistema:     0.00%
 
 Linha do Tempo (Gantt):
-| P1 | (Troca) | (Troca) |
+| P1 | (Troca) | P2 | (Troca) | P3 | P2 | P1 |
 
 ==================================================
 
