@@ -2,7 +2,19 @@ import copy
 import os
 import sys
 
-# --- CLASSE PROCESSO ---
+SWITCH_MARK = 'Escalonador'
+IDLE_MARK = 'Ocioso'
+
+
+def _tick_idle(linha_tempo, tempo_atual):
+    linha_tempo.append(IDLE_MARK)
+    return tempo_atual + 1
+
+
+def _tick_switch(linha_tempo, tempo_atual):
+    linha_tempo.append(SWITCH_MARK)
+    return tempo_atual + 1
+
 class Processo:
     def __init__(self, pid, chegada, prioridade, tempo_cpu):
         self.pid = pid
@@ -14,7 +26,6 @@ class Processo:
         self.tempo_fim = 0
         self.tempo_retorno = 0 # Turnaround
 
-# --- LEITURA DE ARQUIVO ---
 def ler_arquivo(nome_arquivo):
     processos = []
     try:
@@ -22,7 +33,7 @@ def ler_arquivo(nome_arquivo):
             linhas = f.readlines()
             linhas = [l.strip() for l in linhas if l.strip()] # Limpa vazias
             
-            # 1. Configuração
+            # Configuração
             config = linhas[0].split(',')
             if not config[0].isdigit():
                  print("Erro: A primeira linha deve conter os numeros de configuracao.")
@@ -32,7 +43,7 @@ def ler_arquivo(nome_arquivo):
             quantum = int(config[1])
             t_troca = int(config[2])
             
-            # 2. Processos
+            # Processos
             count = 0
             for linha in linhas[1:]:
                 if count >= n_proc: break # Para se ja leu todos
@@ -54,7 +65,6 @@ def ler_arquivo(nome_arquivo):
         
     return processos, quantum, t_troca
 
-# --- LOG E IMPRESSÃO ---
 def log(texto, arquivo_saida):
     print(texto, end='') 
     with open(arquivo_saida, 'a', encoding='utf-8') as f: 
@@ -76,45 +86,76 @@ def imprimir_resultados(nome_algo, processos_finalizados, trocas, t_troca, tempo
         texto.append(f"{p.pid:<5} | {p.tempo_retorno:<18}ms\n")
     
     media_turnaround = soma_turnaround / len(processos_finalizados) if processos_finalizados else 0
-    overhead = (trocas * t_troca) / tempo_total * 100 if tempo_total > 0 else 0
+    
+    # Overhead como Fração e Porcentagem
+    tempo_trocas = trocas * t_troca
+    overhead_frac = tempo_trocas / tempo_total if tempo_total > 0 else 0
+    overhead_perc = overhead_frac * 100
     
     texto.append("-" * 30 + "\n")
     texto.append(f"Tempo Medio de Retorno:  {media_turnaround:.2f}ms\n")
     texto.append(f"Trocas de Contexto:      {trocas}\n")
     texto.append(f"Tempo Total Simulacao:   {tempo_total}ms\n")
-    texto.append(f"Overhead do Sistema:     {overhead:.2f}%\n")
+    texto.append(f"Overhead do Sistema:     {overhead_frac:.4f} ({overhead_perc:.2f}%)\n")
     
-    gantt_str = "|"
-    for item in linha_tempo:
-        if item == 'Troca':
-            gantt_str += " (Troca) |"
-        else:
-            gantt_str += f" P{item} |"
-    
-    texto.append("\nLinha do Tempo (Gantt):\n")
-    texto.append(gantt_str + "\n")
+    def formatar_linha_tempo(itens, largura=120):
+        partes = []
+        for item in itens:
+            if isinstance(item, int):
+                partes.append(f"P{item}")
+            else:
+                partes.append(str(item))
+
+        linhas = []
+        linha_atual = ""
+        for p in partes:
+            if not linha_atual:
+                linha_atual = p
+                continue
+            candidato = linha_atual + " " + p
+            if len(candidato) > largura:
+                linhas.append(linha_atual)
+                linha_atual = p
+            else:
+                linha_atual = candidato
+        if linha_atual:
+            linhas.append(linha_atual)
+
+        return "\n".join(linhas)
+
+    texto.append("\nLinha do Tempo (CPU por instante):\n")
+    texto.append(formatar_linha_tempo(linha_tempo) + "\n")
     texto.append("\n" + "="*50 + "\n\n")
 
     log("".join(texto), arquivo_saida)
 
-# --- ALGORITMOS ---
 
 def run_fcfs(processos, t_troca):
-    fila = sorted(processos, key=lambda x: x.chegada)
+    # Desempate: Chegada -> PID menor
+    fila = sorted(processos, key=lambda x: (x.chegada, x.pid))
     tempo_atual = 0
     trocas = 0
     linha_tempo = []
+    ultimo_pid = None
+
     for p in fila:
-        if tempo_atual < p.chegada: tempo_atual = p.chegada
-        if tempo_atual > 0: 
+        while tempo_atual < p.chegada:
+            tempo_atual = _tick_idle(linha_tempo, tempo_atual)
+
+        if ultimo_pid is not None and ultimo_pid != p.pid:
             trocas += 1
-            tempo_atual += t_troca
-            linha_tempo.append('Troca')
+            for _ in range(t_troca):
+                tempo_atual = _tick_switch(linha_tempo, tempo_atual)
+
         p.tempo_inicio = tempo_atual
-        tempo_atual += p.tempo_cpu
+        for _ in range(p.tempo_cpu):
+            linha_tempo.append(p.pid)
+            tempo_atual += 1
+
         p.tempo_fim = tempo_atual
         p.tempo_restante = 0
-        linha_tempo.append(p.pid)
+        ultimo_pid = p.pid
+
     return fila, trocas, tempo_atual, linha_tempo
 
 def run_sjf(processos, t_troca):
@@ -122,67 +163,72 @@ def run_sjf(processos, t_troca):
     trocas = 0
     linha_tempo = []
     finalizados = []
-    pendentes = sorted(processos, key=lambda x: x.chegada)
+    ultimo_pid = None
+    # Ordena lista principal por Chegada -> PID
+    pendentes = sorted(processos, key=lambda x: (x.chegada, x.pid))
+    
     while len(finalizados) < len(processos):
         disponiveis = [p for p in pendentes if p.chegada <= tempo_atual and p not in finalizados]
+        
         if not disponiveis:
-            tempo_atual += 1 
+            tempo_atual = _tick_idle(linha_tempo, tempo_atual)
             continue
-        escolhido = min(disponiveis, key=lambda x: x.tempo_cpu)
-        if tempo_atual > 0:
+            
+        # SJF: Menor CPU -> Menor Chegada -> Menor PID
+        escolhido = min(disponiveis, key=lambda x: (x.tempo_cpu, x.chegada, x.pid))
+        
+        if ultimo_pid is not None and ultimo_pid != escolhido.pid:
             trocas += 1
-            tempo_atual += t_troca
-            linha_tempo.append('Troca')
+            for _ in range(t_troca):
+                tempo_atual = _tick_switch(linha_tempo, tempo_atual)
+
         escolhido.tempo_inicio = tempo_atual
-        tempo_atual += escolhido.tempo_cpu
+        for _ in range(escolhido.tempo_cpu):
+            linha_tempo.append(escolhido.pid)
+            tempo_atual += 1
+
         escolhido.tempo_fim = tempo_atual
         escolhido.tempo_restante = 0
-        linha_tempo.append(escolhido.pid)
         finalizados.append(escolhido)
+        ultimo_pid = escolhido.pid
+        
     return finalizados, trocas, tempo_atual, linha_tempo
 
 def run_srtf(processos, t_troca):
     tempo_atual = 0
     trocas = 0
     linha_tempo = []
-    pendentes = processos
-    ultimo_pid = -1
+    pid_ultimo_executado = None
     concluidos = 0
-    
+
     while concluidos < len(processos):
-        disponiveis = [p for p in pendentes if p.chegada <= tempo_atual and p.tempo_restante > 0]
+        disponiveis = [p for p in processos if p.chegada <= tempo_atual and p.tempo_restante > 0]
+
         if not disponiveis:
-            tempo_atual += 1
+            tempo_atual = _tick_idle(linha_tempo, tempo_atual)
+            pid_ultimo_executado = None
             continue
-        escolhido = min(disponiveis, key=lambda x: x.tempo_restante)
-        
-        # Lógica de Troca
-        if escolhido.pid != ultimo_pid:
-            if ultimo_pid != -1: 
-                trocas += 1
-                tempo_atual += t_troca
-                linha_tempo.append('Troca')
-            ultimo_pid = escolhido.pid
-        
+
+        # SRTF: Menor Restante -> Menor Chegada -> Menor PID
+        escolhido = min(disponiveis, key=lambda x: (x.tempo_restante, x.chegada, x.pid))
+
+        if pid_ultimo_executado is not None and pid_ultimo_executado != escolhido.pid:
+            trocas += 1
+            for _ in range(t_troca):
+                tempo_atual = _tick_switch(linha_tempo, tempo_atual)
+            pid_ultimo_executado = None
+            continue
+
         escolhido.tempo_restante -= 1
+        linha_tempo.append(escolhido.pid)
         tempo_atual += 1
-        
-        # --- CORREÇÃO VISUAL ---
-        # Adiciona na linha do tempo se for novo ou se vier depois de uma troca
-        should_add = False
-        if len(linha_tempo) == 0: should_add = True
-        elif linha_tempo[-1] == 'Troca': should_add = True
-        elif linha_tempo[-1] != escolhido.pid: should_add = True
-        
-        if should_add:
-            linha_tempo.append(escolhido.pid)
-        # -----------------------
+        pid_ultimo_executado = escolhido.pid
 
         if escolhido.tempo_restante == 0:
             escolhido.tempo_fim = tempo_atual
             concluidos += 1
-            ultimo_pid = -1 
-            
+            # Mantém pid_ultimo_executado para contar a troca ao iniciar outro processo
+
     return processos, trocas, tempo_atual, linha_tempo
 
 def run_rr(processos, quantum, t_troca):
@@ -191,77 +237,92 @@ def run_rr(processos, quantum, t_troca):
     linha_tempo = []
     fila = []
     idx_chegada = 0
-    processos.sort(key=lambda x: x.chegada) 
-    if processos:
-        if processos[0].chegada > tempo_atual: tempo_atual = processos[0].chegada
-        fila.append(processos[0])
-        idx_chegada = 1
+
+    processos.sort(key=lambda x: (x.chegada, x.pid))
+
+    def enfileirar_chegadas():
+        nonlocal idx_chegada
+        while idx_chegada < len(processos) and processos[idx_chegada].chegada <= tempo_atual:
+            fila.append(processos[idx_chegada])
+            idx_chegada += 1
+
+    ultimo_pid = None
+
     while fila or idx_chegada < len(processos):
-        if not fila and idx_chegada < len(processos):
-             if tempo_atual < processos[idx_chegada].chegada:
-                 tempo_atual = processos[idx_chegada].chegada
-             fila.append(processos[idx_chegada])
-             idx_chegada += 1
-        if not fila: break 
+        if not fila:
+            proxima_chegada = processos[idx_chegada].chegada
+            while tempo_atual < proxima_chegada:
+                tempo_atual = _tick_idle(linha_tempo, tempo_atual)
+            enfileirar_chegadas()
+
+        if not fila:
+            break
+
         p = fila.pop(0)
-        trocas += 1
-        if tempo_atual > 0:
-            tempo_atual += t_troca
-            linha_tempo.append('Troca')
+
+        if ultimo_pid is not None and ultimo_pid != p.pid:
+            trocas += 1
+            for _ in range(t_troca):
+                tempo_atual = _tick_switch(linha_tempo, tempo_atual)
+                enfileirar_chegadas()
+
         tempo_exec = min(quantum, p.tempo_restante)
         for _ in range(tempo_exec):
             p.tempo_restante -= 1
+            linha_tempo.append(p.pid)
             tempo_atual += 1
-            while idx_chegada < len(processos) and processos[idx_chegada].chegada <= tempo_atual:
-                fila.append(processos[idx_chegada])
-                idx_chegada += 1
-        linha_tempo.append(p.pid)
-        if p.tempo_restante > 0: fila.append(p) 
-        else: p.tempo_fim = tempo_atual
+            enfileirar_chegadas()
+            if p.tempo_restante == 0:
+                break
+
+        if p.tempo_restante > 0:
+            fila.append(p)
+        else:
+            p.tempo_fim = tempo_atual
+
+        ultimo_pid = p.pid
+
     return processos, trocas, tempo_atual, linha_tempo
 
 def run_prioridade(processos, t_troca):
     tempo_atual = 0
     trocas = 0
     linha_tempo = []
-    pendentes = processos
-    ultimo_pid = -1
+    pid_ultimo_executado = None
     concluidos = 0
+
     while concluidos < len(processos):
-        disponiveis = [p for p in pendentes if p.chegada <= tempo_atual and p.tempo_restante > 0]
+        disponiveis = [p for p in processos if p.chegada <= tempo_atual and p.tempo_restante > 0]
+
         if not disponiveis:
-            tempo_atual += 1
+            tempo_atual = _tick_idle(linha_tempo, tempo_atual)
+            pid_ultimo_executado = None
             continue
-        # Maior numero = Maior prioridade
-        escolhido = sorted(disponiveis, key=lambda x: (-x.prioridade, x.chegada))[0]
-        
-        if escolhido.pid != ultimo_pid:
-            if ultimo_pid != -1:
-                trocas += 1
-                tempo_atual += t_troca
-                linha_tempo.append('Troca')
-            ultimo_pid = escolhido.pid
-            
+
+        # ENUNCIADO: menor valor numérico = maior prioridade
+        # Desempates: chegada e depois PID
+        escolhido = min(disponiveis, key=lambda x: (x.prioridade, x.chegada, x.pid))
+
+        if pid_ultimo_executado is not None and pid_ultimo_executado != escolhido.pid:
+            trocas += 1
+            for _ in range(t_troca):
+                tempo_atual = _tick_switch(linha_tempo, tempo_atual)
+            pid_ultimo_executado = None
+            continue
+
         escolhido.tempo_restante -= 1
+        linha_tempo.append(escolhido.pid)
         tempo_atual += 1
-        
-        # --- CORREÇÃO VISUAL ---
-        should_add = False
-        if len(linha_tempo) == 0: should_add = True
-        elif linha_tempo[-1] == 'Troca': should_add = True
-        elif linha_tempo[-1] != escolhido.pid: should_add = True
-        
-        if should_add:
-            linha_tempo.append(escolhido.pid)
-        # -----------------------
+        pid_ultimo_executado = escolhido.pid
 
         if escolhido.tempo_restante == 0:
             escolhido.tempo_fim = tempo_atual
             concluidos += 1
-            ultimo_pid = -1
+            # Mantém pid_ultimo_executado para contar a troca ao iniciar outro processo
+
     return processos, trocas, tempo_atual, linha_tempo
 
-# --- MAIN ---
+#Função Principal
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Erro: Forneca o arquivo de entrada.")
@@ -298,6 +359,6 @@ if __name__ == "__main__":
     imprimir_resultados(f"Round Robin (Q={q})", p_rr, tr, t, tot, lin, arquivo_saida)
     
     p_prio, tr, tot, lin = run_prioridade(copy.deepcopy(procs), t)
-    imprimir_resultados("Prioridade (Preemptiva)", p_prio, tr, t, tot, lin, arquivo_saida)
+    imprimir_resultados("Prioridade (Preemptiva - Menor Valor=Maior Prio)", p_prio, tr, t, tot, lin, arquivo_saida)
     
     print(f"\nSucesso! Arquivo '{arquivo_saida}' gerado.")

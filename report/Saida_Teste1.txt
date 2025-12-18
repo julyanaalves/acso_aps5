@@ -8,10 +8,10 @@ PID   | Retorno (Turnaround)
 Tempo Medio de Retorno:  12.00ms
 Trocas de Contexto:      2
 Tempo Total Simulacao:   17ms
-Overhead do Sistema:     0.00%
+Overhead do Sistema:     0.0000 (0.00%)
 
-Linha do Tempo (Gantt):
-| P1 | (Troca) | P2 | (Troca) | P3 |
+Linha do Tempo (CPU por instante):
+P1 P1 P1 P1 P1 P1 P1 P1 P1 P1 P2 P2 P2 P2 P2 P3 P3
 
 ==================================================
 
@@ -25,10 +25,10 @@ PID   | Retorno (Turnaround)
 Tempo Medio de Retorno:  11.00ms
 Trocas de Contexto:      2
 Tempo Total Simulacao:   17ms
-Overhead do Sistema:     0.00%
+Overhead do Sistema:     0.0000 (0.00%)
 
-Linha do Tempo (Gantt):
-| P1 | (Troca) | P3 | (Troca) | P2 |
+Linha do Tempo (CPU por instante):
+P1 P1 P1 P1 P1 P1 P1 P1 P1 P1 P3 P3 P2 P2 P2 P2 P2
 
 ==================================================
 
@@ -42,10 +42,10 @@ PID   | Retorno (Turnaround)
 Tempo Medio de Retorno:  8.67ms
 Trocas de Contexto:      2
 Tempo Total Simulacao:   17ms
-Overhead do Sistema:     0.00%
+Overhead do Sistema:     0.0000 (0.00%)
 
-Linha do Tempo (Gantt):
-| P1 | (Troca) | P2 | (Troca) | P3 | P2 | P1 |
+Linha do Tempo (CPU por instante):
+P1 P1 P2 P2 P3 P3 P2 P2 P2 P1 P1 P1 P1 P1 P1 P1 P1
 
 ==================================================
 
@@ -57,29 +57,29 @@ PID   | Retorno (Turnaround)
 3     | 13                ms
 ------------------------------
 Tempo Medio de Retorno:  12.00ms
-Trocas de Contexto:      3
+Trocas de Contexto:      2
 Tempo Total Simulacao:   17ms
-Overhead do Sistema:     0.00%
+Overhead do Sistema:     0.0000 (0.00%)
 
-Linha do Tempo (Gantt):
-| P1 | (Troca) | P2 | (Troca) | P3 |
+Linha do Tempo (CPU por instante):
+P1 P1 P1 P1 P1 P1 P1 P1 P1 P1 P2 P2 P2 P2 P2 P3 P3
 
 ==================================================
 
-=== Prioridade (Preemptiva) ===
+=== Prioridade (Preemptiva - Menor Valor=Maior Prio) ===
 PID   | Retorno (Turnaround)
 ------------------------------
-1     | 17                ms
-2     | 7                 ms
-3     | 2                 ms
+1     | 10                ms
+2     | 13                ms
+3     | 13                ms
 ------------------------------
-Tempo Medio de Retorno:  8.67ms
-Trocas de Contexto:      2
+Tempo Medio de Retorno:  12.00ms
+Trocas de Contexto:      0
 Tempo Total Simulacao:   17ms
-Overhead do Sistema:     0.00%
+Overhead do Sistema:     0.0000 (0.00%)
 
-Linha do Tempo (Gantt):
-| P1 | (Troca) | P2 | (Troca) | P3 | P2 | P1 |
+Linha do Tempo (CPU por instante):
+P1 P1 P1 P1 P1 P1 P1 P1 P1 P1 P2 P2 P2 P2 P2 P3 P3
 
 ==================================================
 

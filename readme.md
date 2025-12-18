@@ -12,6 +12,8 @@ O simulador executa os seguintes algoritmos para o mesmo conjunto de processos:
 4.  **Round Robin:** Cada processo recebe uma fatia de tempo (Quantum). Se não terminar, volta para o fim da fila.
 5.  **Prioridade:** Escolhe o processo com maior prioridade. Preemptivo (se chegar um processo com prioridade maior, o atual é interrompido).
 
+Obs.: conforme o enunciado, **quanto menor o valor numérico da prioridade, maior é a prioridade**.
+
 ## Estrutura do Projeto
 
 -   `main.py`: Script principal contendo a lógica de simulação e os algoritmos.
@@ -56,6 +58,8 @@ ID,Chegada,Prioridade,TempoCPU
 -   `ID`: Identificador único do processo.
 -   `Chegada`: Tempo em que o processo chega na fila de prontos.
 -   `Prioridade`: Prioridade do processo (maior valor indica maior prioridade).
+
+> No algoritmo de Prioridade deste projeto, **menor número = maior prioridade**, como pedido no enunciado.
 -   `TempoCPU`: Tempo total de execução necessário (Burst Time).
 
 **Exemplo:**
@@ -77,3 +81,10 @@ Para cada algoritmo, o simulador exibe:
 -   **Tempo Total de Simulação:** Tempo total gasto para executar todos os processos, incluindo trocas.
 -   **Overhead do Sistema:** Porcentagem do tempo total gasto apenas em trocas de contexto.
 -   **Linha do Tempo (Gantt):** Visualização simplificada da ordem de execução.
+
+### Linha do tempo
+
+A “Linha do Tempo (CPU por instante)” mostra **a ocupação da CPU a cada unidade de tempo** do início ao fim:
+- `P<id>` quando um processo está executando
+- `Escalonador` durante a troca de contexto (por `tTroca` instantes)
+- `Ocioso` quando não há processo pronto para executar

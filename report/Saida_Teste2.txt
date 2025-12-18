@@ -8,10 +8,10 @@ PID   | Retorno (Turnaround)
 Tempo Medio de Retorno:  8.33ms
 Trocas de Contexto:      2
 Tempo Total Simulacao:   14ms
-Overhead do Sistema:     14.29%
+Overhead do Sistema:     0.1429 (14.29%)
 
-Linha do Tempo (Gantt):
-| P1 | (Troca) | P2 | (Troca) | P3 |
+Linha do Tempo (CPU por instante):
+P1 P1 P1 P1 P1 P1 Escalonador P2 P2 P2 P2 Escalonador P3 P3
 
 ==================================================
 
@@ -25,10 +25,10 @@ PID   | Retorno (Turnaround)
 Tempo Medio de Retorno:  7.67ms
 Trocas de Contexto:      2
 Tempo Total Simulacao:   14ms
-Overhead do Sistema:     14.29%
+Overhead do Sistema:     0.1429 (14.29%)
 
-Linha do Tempo (Gantt):
-| P1 | (Troca) | P3 | (Troca) | P2 |
+Linha do Tempo (CPU por instante):
+P1 P1 P1 P1 P1 P1 Escalonador P3 P3 Escalonador P2 P2 P2 P2
 
 ==================================================
 
@@ -36,16 +36,16 @@ Linha do Tempo (Gantt):
 PID   | Retorno (Turnaround)
 ------------------------------
 1     | 6                 ms
-2     | 10                ms
-3     | 4                 ms
+2     | 12                ms
+3     | 5                 ms
 ------------------------------
-Tempo Medio de Retorno:  6.67ms
-Trocas de Contexto:      0
-Tempo Total Simulacao:   12ms
-Overhead do Sistema:     0.00%
+Tempo Medio de Retorno:  7.67ms
+Trocas de Contexto:      2
+Tempo Total Simulacao:   14ms
+Overhead do Sistema:     0.1429 (14.29%)
 
-Linha do Tempo (Gantt):
-| P1 | P3 | P2 |
+Linha do Tempo (CPU por instante):
+P1 P1 P1 P1 P1 P1 Escalonador P3 P3 Escalonador P2 P2 P2 P2
 
 ==================================================
 
@@ -57,29 +57,29 @@ PID   | Retorno (Turnaround)
 3     | 8                 ms
 ------------------------------
 Tempo Medio de Retorno:  10.00ms
-Trocas de Contexto:      4
+Trocas de Contexto:      3
 Tempo Total Simulacao:   15ms
-Overhead do Sistema:     26.67%
+Overhead do Sistema:     0.2000 (20.00%)
 
-Linha do Tempo (Gantt):
-| P1 | (Troca) | P2 | (Troca) | P3 | (Troca) | P1 |
+Linha do Tempo (CPU por instante):
+P1 P1 P1 P1 Escalonador P2 P2 P2 P2 Escalonador P3 P3 Escalonador P1 P1
 
 ==================================================
 
-=== Prioridade (Preemptiva) ===
+=== Prioridade (Preemptiva - Menor Valor=Maior Prio) ===
 PID   | Retorno (Turnaround)
 ------------------------------
-1     | 14                ms
-2     | 8                 ms
-3     | 3                 ms
+1     | 6                 ms
+2     | 9                 ms
+3     | 10                ms
 ------------------------------
 Tempo Medio de Retorno:  8.33ms
 Trocas de Contexto:      2
 Tempo Total Simulacao:   14ms
-Overhead do Sistema:     14.29%
+Overhead do Sistema:     0.1429 (14.29%)
 
-Linha do Tempo (Gantt):
-| P1 | (Troca) | (Troca) |
+Linha do Tempo (CPU por instante):
+P1 P1 P1 P1 P1 P1 Escalonador P2 P2 P2 P2 Escalonador P3 P3
 
 ==================================================
 
