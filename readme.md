@@ -21,14 +21,21 @@ O simulador executa os seguintes algoritmos para o mesmo conjunto de processos:
 
 Certifique-se de ter o Python instalado em sua máquina.
 
-1.  Coloque o arquivo `EntradaProcessos.txt` na mesma pasta que o `main.py`.
-2.  Execute o script:
+1.  Prepare seu arquivo de entrada (ex: `in/Teste1.txt`).
+2.  Execute o script passando o caminho do arquivo como argumento:
 
 ```bash
-python main.py
+python main.py in/Teste1.txt
 ```
 
-O programa lerá o arquivo de entrada, executará todos os algoritmos sequencialmente e exibirá os resultados no console.
+O programa lerá o arquivo especificado e gerará um relatório na pasta `report/`.
+
+### Saída
+
+Os resultados serão salvos automaticamente na pasta `report/` com o prefixo `Saida_`.
+Exemplo:
+- Entrada: `in/Teste1.txt`
+- Saída: `report/Saida_Teste1.txt`
 
 ## Formato do Arquivo de Entrada (`EntradaProcessos.txt`)
 

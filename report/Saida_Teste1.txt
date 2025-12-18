@@ -1,0 +1,85 @@
+=== FCFS ===
+PID   | Retorno (Turnaround)
+------------------------------
+1     | 10                ms
+2     | 13                ms
+3     | 13                ms
+------------------------------
+Tempo Medio de Retorno:  12.00ms
+Trocas de Contexto:      2
+Tempo Total Simulacao:   17ms
+Overhead do Sistema:     0.00%
+
+Linha do Tempo (Gantt):
+| P1 | (Troca) | P2 | (Troca) | P3 |
+
+==================================================
+
+=== SJF (Nao Preemptivo) ===
+PID   | Retorno (Turnaround)
+------------------------------
+1     | 10                ms
+2     | 15                ms
+3     | 8                 ms
+------------------------------
+Tempo Medio de Retorno:  11.00ms
+Trocas de Contexto:      2
+Tempo Total Simulacao:   17ms
+Overhead do Sistema:     0.00%
+
+Linha do Tempo (Gantt):
+| P1 | (Troca) | P3 | (Troca) | P2 |
+
+==================================================
+
+=== SRTF (Preemptivo) ===
+PID   | Retorno (Turnaround)
+------------------------------
+1     | 17                ms
+2     | 7                 ms
+3     | 2                 ms
+------------------------------
+Tempo Medio de Retorno:  8.67ms
+Trocas de Contexto:      2
+Tempo Total Simulacao:   17ms
+Overhead do Sistema:     0.00%
+
+Linha do Tempo (Gantt):
+| P1 | (Troca) | (Troca) |
+
+==================================================
+
+=== Round Robin (Q=10) ===
+PID   | Retorno (Turnaround)
+------------------------------
+1     | 10                ms
+2     | 13                ms
+3     | 13                ms
+------------------------------
+Tempo Medio de Retorno:  12.00ms
+Trocas de Contexto:      3
+Tempo Total Simulacao:   17ms
+Overhead do Sistema:     0.00%
+
+Linha do Tempo (Gantt):
+| P1 | (Troca) | P2 | (Troca) | P3 |
+
+==================================================
+
+=== Prioridade (Preemptiva) ===
+PID   | Retorno (Turnaround)
+------------------------------
+1     | 17                ms
+2     | 7                 ms
+3     | 2                 ms
+------------------------------
+Tempo Medio de Retorno:  8.67ms
+Trocas de Contexto:      2
+Tempo Total Simulacao:   17ms
+Overhead do Sistema:     0.00%
+
+Linha do Tempo (Gantt):
+| P1 | (Troca) | (Troca) |
+
+==================================================
+
