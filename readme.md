@@ -84,7 +84,7 @@ Para cada algoritmo, o simulador exibe:
 Observações sobre troca de contexto (`tTroca`):
 - Quando ocorre alternância entre processos, a simulação insere `tTroca` instantes de CPU como `Escalonador`.
 - A métrica **Trocas de Contexto** conta quantas vezes a CPU saiu de um processo e foi para outro (não inclui o início da simulação).
-- O **Overhead do Sistema** é calculado como $(\text{trocas} \times tTroca) / \text{tempo\_total}$.
+- O **Overhead do Sistema** é calculado como $(\text{trocas} \times tTroca) / \text{tempo\\_total}$.
 
 ### Linha do tempo
 
