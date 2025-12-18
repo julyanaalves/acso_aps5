@@ -12,12 +12,13 @@ O simulador executa os seguintes algoritmos para o mesmo conjunto de processos:
 4.  **Round Robin:** Cada processo recebe uma fatia de tempo (Quantum). Se não terminar, volta para o fim da fila.
 5.  **Prioridade:** Escolhe o processo com maior prioridade. Preemptivo (se chegar um processo com prioridade maior, o atual é interrompido).
 
-Obs.: conforme o enunciado, **quanto menor o valor numérico da prioridade, maior é a prioridade**.
+Obs.: conforme o enunciado e a implementação deste projeto, **quanto menor o valor numérico da prioridade, maior é a prioridade**.
 
 ## Estrutura do Projeto
 
 -   `main.py`: Script principal contendo a lógica de simulação e os algoritmos.
--   `EntradaProcessos.txt`: Arquivo de configuração e lista de processos a serem simulados.
+-   `in/`: Arquivos de entrada (ex.: `in/Teste1.txt`, `in/Teste2.txt`).
+-   `report/`: Relatórios gerados (ex.: `report/Saida_Teste1.txt`).
 
 ## Como Executar
 
@@ -39,7 +40,7 @@ Exemplo:
 - Entrada: `in/Teste1.txt`
 - Saída: `report/Saida_Teste1.txt`
 
-## Formato do Arquivo de Entrada (`EntradaProcessos.txt`)
+## Formato do Arquivo de Entrada
 
 O arquivo deve seguir estritamente o formato abaixo (separado por vírgulas):
 
@@ -57,9 +58,7 @@ ID,Chegada,Prioridade,TempoCPU
 ```
 -   `ID`: Identificador único do processo.
 -   `Chegada`: Tempo em que o processo chega na fila de prontos.
--   `Prioridade`: Prioridade do processo (maior valor indica maior prioridade).
-
-> No algoritmo de Prioridade deste projeto, **menor número = maior prioridade**, como pedido no enunciado.
+-   `Prioridade`: Prioridade do processo (**menor valor numérico = maior prioridade**).
 -   `TempoCPU`: Tempo total de execução necessário (Burst Time).
 
 **Exemplo:**
@@ -82,9 +81,19 @@ Para cada algoritmo, o simulador exibe:
 -   **Overhead do Sistema:** Porcentagem do tempo total gasto apenas em trocas de contexto.
 -   **Linha do Tempo (Gantt):** Visualização simplificada da ordem de execução.
 
+Observações sobre troca de contexto (`tTroca`):
+- Quando ocorre alternância entre processos, a simulação insere `tTroca` instantes de CPU como `Escalonador`.
+- A métrica **Trocas de Contexto** conta quantas vezes a CPU saiu de um processo e foi para outro (não inclui o início da simulação).
+- O **Overhead do Sistema** é calculado como $(\text{trocas} \times tTroca) / \text{tempo\_total}$.
+
 ### Linha do tempo
 
 A “Linha do Tempo (CPU por instante)” mostra **a ocupação da CPU a cada unidade de tempo** do início ao fim:
 - `P<id>` quando um processo está executando
 - `Escalonador` durante a troca de contexto (por `tTroca` instantes)
 - `Ocioso` quando não há processo pronto para executar
+
+Desempates usados (quando aplicável):
+- FCFS: menor chegada, depois menor PID.
+- SJF/SRTF: menor tempo (CPU/restante), depois menor chegada, depois menor PID.
+- Prioridade: menor prioridade (maior prioridade), depois menor chegada, depois menor PID.
